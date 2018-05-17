@@ -2,11 +2,9 @@
   <div #history class="history">
     <p>Music cil [版本 1.0.16299.231]</p>
     <p>(c) 2017 Music Corporation。保留所有权利。</p>
-    <p>Music ➢ testa</p>
-    <p>'testa' 不是内部或外部命令，也不是可运行的程序或批处理文件。</p>
   </div>
   <div #foot class="cli-input">
     <span #head class="cli-head">{{headText}}</span>
-    <textarea #input (keyup)="onKey($event)" spellcheck="false" name="" id="" cols="30" rows="10"></textarea>
+    <textarea onkeyup="return false;" #input (keyup)="onKey($event)" spellcheck="false" name="" id="" cols="30" rows="10"></textarea>
   </div>
 </div>

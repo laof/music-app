@@ -1,7 +1,4 @@
-enum MssageColor {
-    undefined = '#f14c4c',
-    success = '#23d18b',
-}
+import { MessageColor } from './script';
 
 enum MssageText {
     undefined = '项识别为 cmdlet、函数、脚本文件或可运行程序的名称。请检查名称的拼写，然后再试一次；或者执行help查看帮助。'
@@ -18,9 +15,10 @@ export class Message extends Command {
         super();
     }
     nocommand(str) {
-        return this.getCommand(str + '：无法将“' + str + '”' + MssageText.undefined, MssageColor.undefined);
+        return this.getCommand(str + '：无法将“' + str + '”' + MssageText.undefined, MessageColor.undefined);
     }
-    success(str) {
-        return this.getCommand(str, MssageColor.success);
+    info(str, color) {
+        return this.getCommand(str, color);
     }
+
 }
