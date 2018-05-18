@@ -52,7 +52,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   search(name) {
     const start = new Date().getTime();
-    print.normal('load: http://www.longhua.online:18080/search?keywords=' + name);
+    print.normal(encodeURI('load: http://www.longhua.online:18080/search?keywords=' + name));
     this.terminal.pause();
     this.service.httpGet(name).subscribe((res: any) => {
       const message = [];
@@ -65,12 +65,12 @@ export class AppComponent implements OnInit, OnDestroy {
         let mess = print.SPAN(i + 1, Color.warn);
         mess += print.SPAN(`: ${v.name} ，`, Color.success);
         mess += print.SPAN(` [id] : ${v.id} ，`, Color.success);
-        mess += print.SPAN(` [artists] : ${v.artists} ，`, Color.normal);
+        mess += print.SPAN(` [演唱] : ${v.artists[0].name} ，`, Color.normal);
+        mess += print.SPAN(` [电台] : 《${v.album.name}》 ，`, Color.normal);
         mess += print.SPAN(` (alias) : ${v.alias} ，`, Color.error);
         mess += print.SPAN(` [duration] : ${v.duration} ，`, Color.normal);
         mess += print.SPAN(` [status] : ${v.status} ，`, Color.normal);
         mess += print.SPAN(` fee : ${v.fee} ，`, Color.normal);
-        mess += print.SPAN(` [album] : ${v.album} ，`, Color.normal);
         mess += print.BR();
         message.push(mess);
       });
@@ -98,7 +98,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.$audio[0].pause();
       },
       start: () => {
-        this.$audio[0].start();
+        this.$audio[0].play();
       },
       bar: {
         sub: (a, b) => {
