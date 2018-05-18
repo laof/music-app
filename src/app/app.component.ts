@@ -5,7 +5,6 @@ import '../assets/js/jquery.terminal.min';
 import { Print, print, Color } from '../serve/print';
 import { getCurrentDate } from '../serve/defer';
 import { format } from '../serve/format-factory';
-
 declare let document: any;
 
 @Component({
@@ -27,6 +26,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
 
+  test() {
+
+  }
+
   ngOnDestroy() {
     this.terminal.destroy();
   }
@@ -44,17 +47,33 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   play(id) {
-    this.service.play(id).subscribe((res: any) => {
-      const url = res.data[0].url;
-      this.$audio.attr('src', url);
+    const promise = [
+      this.service.play(id).toPromise(),
+      this.service.lyric(id).toPromise(),
+    ];
+
+
+    Promise.all(promise).then((arr: any[]) => {
+      const lyric: string = arr[1].lrc.lyric;
+      console.log(lyric);
+      if (!lyric) {
+        print.error('找不到歌词');
+      }
+      const num = new Date().getTime() + '';
+      console.log(lyric.split('\n'));
+      const url = arr[0].data[0].url;
+      if (url) {
+        print.stopLoading();
+        this.$audio.attr('src', url);
+        this.musicPlay();
+      }
     });
   }
 
   search(name) {
     const start = new Date().getTime();
-    print.normal(encodeURI('load: http://www.longhua.online:18080/search?keywords=' + name));
     this.terminal.pause();
-    this.service.httpGet(name).subscribe((res: any) => {
+    this.service.search(name).subscribe((res: any) => {
 
       print.normal(format.list(res));
       print.success('Request：successfully.');
@@ -63,12 +82,21 @@ export class AppComponent implements OnInit, OnDestroy {
 
     });
   }
+  musicStop() {
+    this.$audio[0].pause();
+  }
+  musicPlay() {
+    this.$audio[0].play();
+  }
   initCmd() {
     const terminal = this.terminal = this.$terminal.terminal({
       add: (a, b) => {
         print.normal(a + b);
       },
       foo: 'foo.php',
+      test: () => {
+        this.test();
+      },
       search: name => {
         this.search(name);
       },
@@ -80,10 +108,10 @@ export class AppComponent implements OnInit, OnDestroy {
         this.play(id);
       },
       stop: () => {
-        this.$audio[0].pause();
+        this.musicStop();
       },
       start: () => {
-        this.$audio[0].play();
+        this.musicPlay();
       },
       bar: {
         sub: (a, b) => {

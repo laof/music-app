@@ -9,7 +9,16 @@ export let Color = {
     warn: '#f5f543',
 };
 
+export let loadingText = [
+
+    ''
+
+];
+
+
 export class Print {
+
+    private loading = false;
 
     private L: string;
     private R: string;
@@ -27,6 +36,15 @@ export class Print {
 
     private target(tag, content, color) {
         return `${this.L}${tag} style='color:${color};' ${this.R} ${content} ${this.L}/${tag}${this.R}`;
+    }
+
+    starLoading() {
+        this.log(this.SPAN(Color.warn, Color.normal)).then(dom => {
+
+        });
+    }
+    stopLoading() {
+
     }
     init(terminal) {
         this.terminal = terminal;

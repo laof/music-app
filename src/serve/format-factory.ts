@@ -3,6 +3,41 @@ import { getCurrentDate } from './defer';
 
 
 export class FormatFactory {
+
+    lyric(text) {
+
+        const doc = {
+            time: null,
+            text: null
+        };
+        let leftindex = -1;
+        let rightindex = -1;
+        let success = false;
+        for (let i = 0; i < text.length; i++) {
+
+            const _s = text.charAt(i);
+
+            if (_s === '[' && rightindex === -1) {
+                leftindex = i;
+            } else if (leftindex !== -1 && _s === ']') {
+                rightindex = i;
+            }
+
+            if (leftindex !== -1 && rightindex !== -1) {
+                success = true;
+                doc.time = text.substring(leftindex + 1, rightindex);
+                doc.text = text.substring(rightindex + 1, text.length);
+                break;
+            }
+        }
+
+        if (success) {
+            return doc;
+        } else {
+            console.error(text);
+        }
+    }
+
     help() {
         const item = [];
         item.push(print.P('➢ exit * 回退上一步骤', Color.normal));
