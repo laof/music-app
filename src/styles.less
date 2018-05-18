@@ -1,21 +1,20 @@
 /* You can add global styles to this file, and also import other style files */
 
 // https://v3.bootcss.com/components/#glyphicons
+// http://www.fhdq.net/
 @import 'assets/bootstrap-3.3.7-dist/css/bootstrap.min.css';
-* {
-    padding: 0;
-    margin: 0;
-    font-size: 16px;
-    background: #1e1e1e;
-    color: #cccccc;
+@import '../node_modules/xterm/dist/xterm.css';
+@import '../node_modules/xterm/dist/addons/fullscreen/fullscreen.css';
+@import 'assets/js/jquery.terminal.min.css';
+body {
+    overflow: hidden;
+    background: #000;
 }
 
-p {
-    word-wrap: break-word;
-    word-break: break-all;
-}
-
-input,
-textarea {
-    caret-color: burlywood;
+.terminal,
+.cmd,
+.terminal .terminal-output div div,
+.cmd .prompt {
+    font-size: 18px;
+    line-height: 20px;
 }

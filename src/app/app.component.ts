@@ -1,7 +1,9 @@
-import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { AppService } from '../serve/http';
-import { Step } from '../serve/step';
 import * as $ from 'jquery';
+import '../assets/js/jquery.terminal.min';
+import { Print, print, Color } from '../serve/print';
+import { getCurrentDate } from '../serve/defer';
 
 declare let document: any;
 
@@ -10,131 +12,112 @@ declare let document: any;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.less']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
-  title = 'app';
-  headText = 'Music ➢ ';
-  @ViewChild('input') input: ElementRef;
-  @ViewChild('head') head: ElementRef;
-  @ViewChild('history') history: ElementRef;
-  @ViewChild('foot') foot: ElementRef;
+  private resize = '';
 
-  private step: Step = new Step();
-  private $input: any;
-  private $history: any;
+  @ViewChild('terminal') terminalEle: ElementRef;
+  private $terminal: any;
+  private terminal: any;
+  private $audio: any;
 
   constructor(private service: AppService) {
 
-    document.onkeydown = (e) => {
+  }
 
-      const isFocus = this.$input.is(':focus');
-      if (!isFocus) {
-        this.$input.focus();
-      }
 
-      if (e.code === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
-        return false;
-      }
-      return true;
-    };
+  ngOnDestroy() {
+    this.terminal.destroy();
   }
 
   ngOnInit() {
-    this.$input = $(this.input.nativeElement);
-    this.$history = $(this.history.nativeElement);
-    this.$input.focus();
+    this.$terminal = $(this.terminalEle.nativeElement);
+    this.initCmd();
+    this.onResize();
+    this.$audio = $('#app-audio');
   }
 
-  moveEnd() {
-    const obj = this.input.nativeElement;
-    const len = obj.value.length;
-    if (document.selection) {
-      const sel = obj.createTextRange();
-      sel.moveStart('character', len);
-      sel.collapse();
-      sel.select();
-    } else if (typeof obj.selectionStart === 'number' && typeof obj.selectionEnd === 'number') {
-      obj.selectionStart = obj.selectionEnd = len;
-    }
+  @HostListener('window:resize')
+  onResize() {
+    this.$terminal.height($(window).height() - 15);
   }
 
-  select(value) {
-    if (value) {
-      this.input.nativeElement.value = value;
-    }
-    this.moveEnd();
+  play(id) {
+    this.service.play(id).subscribe((res: any) => {
+      const url = res.data[0].url;
+      console.log(url);
+      this.$audio.attr('src', url);
+    });
   }
 
-  onKey(event) {
+  search(name) {
+    const start = new Date().getTime();
+    print.normal('load: http://www.longhua.online:18080/search?keywords=' + name);
+    this.terminal.pause();
+    this.service.httpGet(name).subscribe((res: any) => {
+      const message = [];
 
-    switch (event.keyCode) {
-      case 13:
-        this.enter();
-        break;
-      case 38:
+      print.normal('Date: ' + getCurrentDate());
+      const attr = [
+        'name', 'id', 'artists', 'alias', 'duration', 'status', 'fee', 'album'
+      ];
+      res.result.songs.forEach((v, i) => {
+        let mess = print.SPAN(i + 1, Color.warn);
+        mess += print.SPAN(`: ${v.name} ，`, Color.success);
+        mess += print.SPAN(` [id] : ${v.id} ，`, Color.success);
+        mess += print.SPAN(` [artists] : ${v.artists} ，`, Color.normal);
+        mess += print.SPAN(` (alias) : ${v.alias} ，`, Color.error);
+        mess += print.SPAN(` [duration] : ${v.duration} ，`, Color.normal);
+        mess += print.SPAN(` [status] : ${v.status} ，`, Color.normal);
+        mess += print.SPAN(` fee : ${v.fee} ，`, Color.normal);
+        mess += print.SPAN(` [album] : ${v.album} ，`, Color.normal);
+        mess += print.BR();
+        message.push(mess);
+      });
 
-        this.select(this.step.goBack());
-        break;
-      case 40:
+      print.normal(message.join(''));
+      print.success('Request：successfully.');
+      print.normal('Time：' + (new Date().getTime() - start) + 'ms');
 
-        this.select(this.step.goTo());
-        break;
-    }
+      this.terminal.resume();
+    });
   }
-
-  delNewline(str) {
-    const newstr = str + '';
-    return newstr.substring(0, newstr.length - 1);
-  }
-  clear() {
-    this.$history.empty();
-  }
-  hideInput() {
-    this.foot.nativeElement.style.visibility = 'hidden';
-  }
-  showInput() {
-    this.foot.nativeElement.style.visibility = 'visible';
-    this.$input.focus().val('');
-  }
-  enter() {
-    const elementRef = this.input.nativeElement;
-    const value = elementRef.value;
-    if (value === '') {
-      elementRef.value = '';
-      this.select(false);
-      return;
-    }
-    this.step.add(value);
-    this.hideInput();
-    const current = value.replace(/\s/g, '&nbsp;'); // 保持输入 输出一致
-    this.$history.append(`<p>${this.headText + current}</p>`);
-
-    setTimeout(() => {
-      const promise: Promise<any> = this.service.input(value);
-
-      promise.then(res => {
-        this.showResponse(res);
-      }).catch(error => error);
-
-    }, 300);
-  }
-  showResponse(response) {
-    if (response && typeof response === 'object') {
-      const res = this[response.key];
-      if (res) {
-        res();
-      } else {
-        console.log(response.result.songs);
+  initCmd() {
+    const terminal = this.terminal = this.$terminal.terminal({
+      add: (a, b) => {
+        terminal.echo(a + b);
+      },
+      foo: 'foo.php',
+      search: name => {
+        this.search(name);
+      },
+      play: id => {
+        this.play(id);
+      },
+      stop: () => {
+        this.$audio[0].pause();
+      },
+      start: () => {
+        this.$audio[0].start();
+      },
+      bar: {
+        sub: (a, b) => {
+          terminal.echo(a - b);
+        }
       }
-      this.showInput();
-      return;
-    }
-    this.$history.append(response);
-    setTimeout(() => {
-      this.input.nativeElement.value = '';
-      this.showInput();
-      this.$input.focus();
-    }, 200);
-  }
+    }, {
+        greetings: '[版本 10.0.16299.231] (c) 2018 Music Corporation。保留所有权利。',
+        name: 'music app',
+        width: '100%',
+        prompt: 'music>',
+        softPause: true,
+        onClear: () => {
+          this.onResize();
+          terminal.resize();
+        }
+      });
 
+    print.init(terminal);
+
+  }
 }
