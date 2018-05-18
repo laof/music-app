@@ -4,6 +4,7 @@ import * as $ from 'jquery';
 import '../assets/js/jquery.terminal.min';
 import { Print, print, Color } from '../serve/print';
 import { getCurrentDate } from '../serve/defer';
+import { format } from '../serve/format-factory';
 
 declare let document: any;
 
@@ -45,7 +46,6 @@ export class AppComponent implements OnInit, OnDestroy {
   play(id) {
     this.service.play(id).subscribe((res: any) => {
       const url = res.data[0].url;
-      console.log(url);
       this.$audio.attr('src', url);
     });
   }
@@ -55,41 +55,26 @@ export class AppComponent implements OnInit, OnDestroy {
     print.normal(encodeURI('load: http://www.longhua.online:18080/search?keywords=' + name));
     this.terminal.pause();
     this.service.httpGet(name).subscribe((res: any) => {
-      const message = [];
 
-      print.normal('Date: ' + getCurrentDate());
-      const attr = [
-        'name', 'id', 'artists', 'alias', 'duration', 'status', 'fee', 'album'
-      ];
-      res.result.songs.forEach((v, i) => {
-        let mess = print.SPAN(i + 1, Color.warn);
-        mess += print.SPAN(`: ${v.name} ，`, Color.success);
-        mess += print.SPAN(` [id] : ${v.id} ，`, Color.success);
-        mess += print.SPAN(` [演唱] : ${v.artists[0].name} ，`, Color.normal);
-        mess += print.SPAN(` [电台] : 《${v.album.name}》 ，`, Color.normal);
-        mess += print.SPAN(` (alias) : ${v.alias} ，`, Color.error);
-        mess += print.SPAN(` [时长] : ${(v.duration / (1000 * 60)).toFixed(2)} ，`, Color.normal);
-        mess += print.SPAN(` [status] : ${v.status} ，`, Color.normal);
-        mess += print.SPAN(` fee : ${v.fee} ，`, Color.normal);
-        mess += print.BR();
-        message.push(mess);
-      });
-
-      print.normal(message.join(''));
+      print.normal(format.list(res));
       print.success('Request：successfully.');
       print.normal('Time：' + (new Date().getTime() - start) + 'ms');
-
       this.terminal.resume();
+
     });
   }
   initCmd() {
     const terminal = this.terminal = this.$terminal.terminal({
       add: (a, b) => {
-        terminal.echo(a + b);
+        print.normal(a + b);
       },
       foo: 'foo.php',
       search: name => {
         this.search(name);
+      },
+      help: () => {
+        const text = format.help();
+        print.normal(text);
       },
       play: id => {
         this.play(id);
@@ -102,7 +87,7 @@ export class AppComponent implements OnInit, OnDestroy {
       },
       bar: {
         sub: (a, b) => {
-          terminal.echo(a - b);
+          print.normal(a - b);
         }
       }
     }, {

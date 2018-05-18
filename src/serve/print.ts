@@ -5,6 +5,7 @@ export let Color = {
     success: '#23d18b',
     error: '#ff0000',
     normal: '#aaa',
+    purple: '#ac3fea', // 紫色
     warn: '#f5f543',
 };
 
