@@ -68,7 +68,7 @@ export class AppComponent implements OnInit, OnDestroy {
         mess += print.SPAN(` [演唱] : ${v.artists[0].name} ，`, Color.normal);
         mess += print.SPAN(` [电台] : 《${v.album.name}》 ，`, Color.normal);
         mess += print.SPAN(` (alias) : ${v.alias} ，`, Color.error);
-        mess += print.SPAN(` [duration] : ${v.duration} ，`, Color.normal);
+        mess += print.SPAN(` [时长] : ${(v.duration / (1000 * 60)).toFixed(2)} ，`, Color.normal);
         mess += print.SPAN(` [status] : ${v.status} ，`, Color.normal);
         mess += print.SPAN(` fee : ${v.fee} ，`, Color.normal);
         mess += print.BR();
