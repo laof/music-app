@@ -49,8 +49,8 @@ export class Print {
             const v = list[i];
             const v1 = list[i + 1];
             const ix = i + 1;
-            const nest = (v1 ? this.target('td', '&nbsp;&nbsp;&nbsp;' + (ix + 1) + '、' + v1.name + ' ID：' + v1.id, v1.id === playId ? Color.success : Color.normal) : '');
-            const td = this.target('td', ix + '、' + v.name + ' ID：' + v.id, v.id === playId ? Color.success : Color.normal) + nest;
+            const nest = (v1 ? this.target('td', '&nbsp;&nbsp;&nbsp;' + (ix + 1) + '、' + v1.name + ' ID：' + v1.id, v1.id === playId ? Color.warn : Color.normal) : '');
+            const td = this.target('td', ix + '、' + v.name + ' ID：' + v.id, v.id === playId ? Color.warn : Color.normal) + nest;
             tr.push(this.target('tr', td));
         }
         this.success(this.target('table', tr.join('')));

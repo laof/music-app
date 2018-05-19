@@ -8,6 +8,8 @@ export class AppService {
 
 
     private storageKey = 'ngAppService';
+    private loopKey = 'ngAppLoopKey';
+    private playInfoKey = 'playInfoKey';
 
     private host = config.server;
     constructor(private http: HttpClient) {
@@ -21,6 +23,15 @@ export class AppService {
         } else {
             return JSON.parse(localStorage.getItem(key));
         }
+    }
+
+
+    playInfo(obj?) {
+        return this.storage(this.playInfoKey, obj);
+    }
+
+    loop(value?) {
+        return this.storage(this.loopKey, value);
     }
 
 

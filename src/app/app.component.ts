@@ -3,7 +3,7 @@ import { AppService } from '../serve/http';
 import * as $ from 'jquery';
 import '../assets/js/jquery.terminal.min';
 import { Print, print, Color } from '../serve/print';
-import { getCurrentDate } from '../serve/defer';
+import { getCurrentDate, Defer } from '../serve/defer';
 import { format, LRC } from '../serve/format-factory';
 
 declare let document: any;
@@ -11,8 +11,6 @@ interface SongSheet {
   name: string;
   id: string | number;
 }
-
-
 
 @Component({
   selector: 'app-root',
@@ -30,7 +28,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private searchList = [];
   private playList: SongSheet[] = [];
 
-  private loop = false;
+  private loop: string;
 
   private resize = '';
   private version = '10.0.16299.231';
@@ -105,6 +103,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.playList = this.service.getPlayList() as any || [];
+    this.loop = this.service.loop();
+    this.playInfo = this.service.playInfo() as any;
     this.$terminal = $(this.terminalEle.nativeElement);
     this.initCmd();
     this.onResize();
@@ -113,7 +113,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.playLyrics();
     });
     this.$audio.on('ended', () => {
-      if (this.loop) {
+      if (this.loop === 'yes') {
         this.musicPlay();
       } else {
         this.next();
@@ -124,6 +124,21 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
   next() {
+    const id = this.playInfo ? this.playInfo.id : '';
+
+    if (this.playList && id) {
+      for (let i = 0; i < this.playList.length; i++) {
+        const v = this.playList[i];
+        if (id === v.id) {
+          const nest = this.playList[i + 1];
+          if (nest) {
+            this.play(nest.id);
+          } else {
+            this.play(this.playList[0].id);
+          }
+        }
+      }
+    }
 
   }
 
@@ -157,25 +172,36 @@ export class AppComponent implements OnInit, OnDestroy {
 
   }
 
-  setCurrent(v) {
-    this.playInfo = {
-      name: v.name,
-      id: v.id
-    };
+  setCurrent(id) {
+
+    for (let i = 0; i < this.playList.length; i++) {
+
+      const v = this.playList[i];
+      if (v.id === id) {
+        this.playInfo = {
+          name: v.name,
+          id: v.id
+        };
+        this.service.playInfo(this.playInfo);
+        return;
+      }
+    }
+
   }
 
 
 
   addList(id) {
 
+    const defer = new Defer();
 
     // 已有列表
     for (let i = 0; i < this.playList.length; i++) {
 
       const v = this.playList[i];
       if (v.id === id) {
-        this.setCurrent(v);
-        return;
+        defer.resolve(false);
+        return defer.promise;
       }
     }
 
@@ -190,9 +216,9 @@ export class AppComponent implements OnInit, OnDestroy {
           name: name,
           id: v.id
         };
-        this.setCurrent(info);
         this.pushPlsyList(info);
-        return;
+        defer.resolve(true);
+        return defer.promise;
       }
     }
 
@@ -209,11 +235,15 @@ export class AppComponent implements OnInit, OnDestroy {
         name,
         id
       };
-      this.pushPlsyList(info);
 
-      this.setCurrent(info);
-
+      if (res.songs.length) {
+        this.pushPlsyList(info);
+        defer.resolve(true);
+      } else {
+        defer.reject('获取歌单信息失败，请检查' + id + '是否存在！');
+      }
     });
+    return defer.promise;
 
   }
 
@@ -267,7 +297,9 @@ export class AppComponent implements OnInit, OnDestroy {
         this.musicPlay(false);
         print.success('资源加载正常，播放中。。。');
         setTimeout(() => {
-          this.addList(id);
+          this.addList(id).then(res => {
+            this.setCurrent(id);
+          });
           this.updateLyrics();
           this.cliStart();
         }, 1000);
@@ -306,11 +338,25 @@ export class AppComponent implements OnInit, OnDestroy {
 
     });
   }
+
+
+
+  showList() {
+    const list = this.service.getPlayList();
+    print.list(list, this.playInfo ? this.playInfo.id : false);
+  }
   musicStop() {
     this.$audio[0].pause();
     print.success('暂停');
   }
   musicPlay(log = true) {
+
+
+    if (!this.$audio[0].src && this.playInfo && this.playInfo.id) {
+      this.play(this.playInfo.id);
+      return;
+    }
+
     this.$audio[0].play();
     if (log) {
       print.success('播放');
@@ -318,9 +364,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   initCmd() {
     const terminal = this.terminal = this.$terminal.terminal({
-      add: (a, b) => {
-        print.normal(a + b);
-      },
       // foo: 'foo.php',
       test: () => {
         this.test();
@@ -335,6 +378,7 @@ export class AppComponent implements OnInit, OnDestroy {
           duration: audio.duration,
           networkState: audio.networkState,
           error: audio.error,
+          loop: this.loop,
           version: this.version,
           playInfo: this.playInfo ? (this.playInfo.name + this.playInfo.id) : '无',
           playbackRate: audio.playbackRate,
@@ -348,12 +392,40 @@ export class AppComponent implements OnInit, OnDestroy {
       volume: n => {
         this.volume(n);
       },
-      remove: id => {
+      add: (id) => {
+        this.cliStop();
+        this.addList(id).then(res => {
+          if (res) {
+            print.success('添加成功');
+            this.showList();
+          } else {
+            print.error('添加失败，列表已存在');
+          }
+          this.cliStart();
+        }).catch(res => {
+          print.error(res);
+          this.cliStart();
+        });
+      },
+      delete: id => {
         this.removeMusic(id);
+        this.showList();
+      },
+      loop: (flag) => {
+
+        switch (flag) {
+          case 'show':
+            print.normal(this.loop);
+            break;
+          case 'yes':
+          case 'no':
+            this.loop = flag;
+            this.service.loop(flag);
+            break;
+        }
       },
       list: () => {
-        const list = this.service.getPlayList();
-        print.list(list, this.playInfo ? this.playInfo.id : false);
+        this.showList();
       },
       search: name => {
         this.search(name);

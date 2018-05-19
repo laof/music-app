@@ -51,6 +51,7 @@ export class FormatFactory {
         item.push(print.P(print.SPAN('-- lyrics，', Color.warn) + 'Show the lyrics of the playback（显示播放的歌词）', Color.normal));
         item.push(print.P(print.SPAN('-- state，', Color.warn) + 'Display the current state（显示当前状态）', Color.normal));
         item.push(print.P(print.SPAN('-- clear，', Color.warn) + 'Emptying console log（清空控制台）', Color.normal));
+        item.push(print.P(print.SPAN('-- loop', Color.warn) + 'Set loop play （设置循环播放）', Color.normal));
         item.push(print.P(print.SPAN('-- exit，', Color.warn) + 'Back level directory（回退上一级目录）', Color.normal));
         item.push(print.P(print.SPAN('-- stop/start，', Color.warn) + 'Pause / play（暂停/播放）', Color.normal));
         return item.join('');
@@ -80,8 +81,8 @@ export class FormatFactory {
             item.push(print.SPAN(` [id] : ${v.id}`, Color.success) + ' ，');
             item.push(print.SPAN(` {演唱} : ${v.artists[0].name} `, Color.normal) + ' ，');
             item.push(print.SPAN(` [电台] : 《${v.album.name}》`, Color.normal) + ' ，');
-            item.push(print.SPAN(` (alias) : ${v.alias}`, Color.error) + ' ，');
             item.push(print.SPAN(` [时长] : ${(v.duration / (1000 * 60)).toFixed(2)}`, Color.purple) + ' ，');
+            item.push(print.SPAN(` (alias) : ${v.alias}`, Color.error) + ' ，');
             item.push(print.SPAN(` [status] : ${v.status} `, Color.normal) + ' ，');
             item.push(print.SPAN(` fee : ${v.fee} `, Color.normal) + ' 。');
             item.push(print.BR());
