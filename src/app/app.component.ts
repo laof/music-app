@@ -123,18 +123,22 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
 
-  next() {
+  next(next = true) {
     const id = this.playInfo ? this.playInfo.id : '';
 
     if (this.playList && id) {
       for (let i = 0; i < this.playList.length; i++) {
         const v = this.playList[i];
         if (id === v.id) {
-          const nest = this.playList[i + 1];
-          if (nest) {
-            this.play(nest.id);
+          const nestObj = this.playList[(next ? (i + 1) : (i - 1))];
+          if (nestObj) {
+            this.play(nestObj.id);
           } else {
-            this.play(this.playList[0].id);
+            if (next) {
+              this.play(this.playList[0].id);
+            } else {
+              this.play(this.playList[this.playList.length - 1].id);
+            }
           }
         }
       }
@@ -299,6 +303,7 @@ export class AppComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.addList(id).then(res => {
             this.setCurrent(id);
+            print.success('当前播放：' + this.playInfo.name + '-ID：' + this.playInfo.id);
           });
           this.updateLyrics();
           this.cliStart();
@@ -342,8 +347,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
   showList() {
-    const list = this.service.getPlayList();
-    print.list(list, this.playInfo ? this.playInfo.id : false);
+    const list = this.service.getPlayList() || [];
+    if (!list.length) {
+      print.warn('播放列表空');
+    } else {
+      print.list(list, this.playInfo ? this.playInfo.id : false);
+    }
   }
   musicStop() {
     this.$audio[0].pause();
@@ -424,6 +433,9 @@ export class AppComponent implements OnInit, OnDestroy {
             break;
         }
       },
+      version: () => {
+        print.normal(this.version);
+      },
       list: () => {
         this.showList();
       },
@@ -433,8 +445,15 @@ export class AppComponent implements OnInit, OnDestroy {
       lyrics: () => {
         this.updateLyrics();
       },
+      next: () => {
+        this.next();
+      },
+      prev: () => {
+        this.next(false);
+      },
       download: id => {
-        this.download(id);
+        print.warn('浏览器不支持');
+        // this.download(id);
       },
       help: () => {
         const text = format.help();

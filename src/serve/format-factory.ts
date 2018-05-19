@@ -47,11 +47,15 @@ export class FormatFactory {
         item.push(print.P(print.SPAN('-- search (Keyword：string)，', Color.warn) + 'Search keywords （搜索关键字）', Color.normal));
         item.push(print.P(print.SPAN('-- play (Number：number)，', Color.warn) + 'Select the song to play through ID（选取id播放）', Color.normal));
         item.push(print.P(print.SPAN('-- volume (Number：number)，', Color.warn) + 'Volume control（音量控制）', Color.normal));
-        item.push(print.P(print.SPAN('-- download (Number：number)，', Color.warn) + 'Download the ID number for music（下载音乐）', Color.normal));
+        item.push(print.P(print.SPAN('-- download (Number：number)，', Color.warn) + 'Downloading music suggests using Google high version browsers. Other browsers may cause errors in the music system and use it cautiously.（下载音乐， 建议使用谷歌高版本浏览器，其他浏览器可能会导致音乐系统出错，慎用。）', Color.purple));
+        item.push(print.P(print.SPAN('-- loop (yes | no | show)', Color.warn) + 'Set the single cycle to play, the default list is true. （设置单曲循环播放，默认列表循环为true）', Color.normal));
+        item.push(print.P(print.SPAN('-- delete (Number：number | all :string)，', Color.warn) + 'Delete one or all of the deletes from the list （从列表中删除某一条或全部删除）', Color.normal));
+        item.push(print.P(print.SPAN('-- add (Number：number)，', Color.warn) + 'Add to the playlist （新增到播放列表）', Color.normal));
         item.push(print.P(print.SPAN('-- lyrics，', Color.warn) + 'Show the lyrics of the playback（显示播放的歌词）', Color.normal));
         item.push(print.P(print.SPAN('-- state，', Color.warn) + 'Display the current state（显示当前状态）', Color.normal));
+        item.push(print.P(print.SPAN('-- next，', Color.warn) + 'Play the next song（播放下一曲）', Color.normal));
+        item.push(print.P(print.SPAN('-- prev，', Color.warn) + 'Play the last song（播放上一曲）', Color.normal));
         item.push(print.P(print.SPAN('-- clear，', Color.warn) + 'Emptying console log（清空控制台）', Color.normal));
-        item.push(print.P(print.SPAN('-- loop', Color.warn) + 'Set loop play （设置循环播放）', Color.normal));
         item.push(print.P(print.SPAN('-- exit，', Color.warn) + 'Back level directory（回退上一级目录）', Color.normal));
         item.push(print.P(print.SPAN('-- stop/start，', Color.warn) + 'Pause / play（暂停/播放）', Color.normal));
         return item.join('');
