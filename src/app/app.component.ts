@@ -470,8 +470,8 @@ export class AppComponent implements OnInit, OnDestroy {
         this.next(false);
       },
       download: id => {
-        print.warn('浏览器不支持');
-        // this.download(id);
+        // print.warn('浏览器不支持');
+        this.download(id);
       },
       help: () => {
         const text = format.help();

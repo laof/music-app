@@ -45,7 +45,7 @@ export class FormatFactory {
     help() {
         const item = [];
         item.push(print.P(print.SPAN('-- search (Keyword：string)，', Color.warn) + 'Search keywords （搜索关键字）', Color.normal));
-        item.push(print.P(print.SPAN('-- play (Number：number)，', Color.warn) + 'Select the song to play through ID（选取id播放）', Color.normal));
+        item.push(print.P(print.SPAN('-- play (Number：number | all )，', Color.warn) + 'Select the song to play through ID or All选取id/全部播放）', Color.normal));
         item.push(print.P(print.SPAN('-- volume (Number：number)，', Color.warn) + 'Volume control（音量控制）', Color.normal));
         item.push(print.P(print.SPAN('-- download (Number：number)，', Color.warn) + 'Downloading music suggests using Google high version browsers. Other browsers may cause errors in the music system and use it cautiously.（下载音乐， 建议使用谷歌高版本浏览器，其他浏览器可能会导致音乐系统出错，慎用。）', Color.purple));
         item.push(print.P(print.SPAN('-- loop (yes | no | show)', Color.warn) + 'Set the single cycle to play, the default list is true. （设置单曲循环播放，默认列表循环为true）', Color.normal));
