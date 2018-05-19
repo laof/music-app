@@ -1,12 +1,16 @@
 import { Print, print, Color } from './print';
 import { getCurrentDate } from './defer';
 
+export interface LRC {
+    time: string;
+    text: string;
+}
 
 export class FormatFactory {
 
     lyric(text) {
 
-        const doc = {
+        const doc: LRC = {
             time: null,
             text: null
         };
@@ -40,12 +44,14 @@ export class FormatFactory {
 
     help() {
         const item = [];
-        item.push(print.P('➢ exit * 回退上一步骤', Color.normal));
-        item.push(print.P('➢ clear * 回退上一步骤', Color.normal));
-        item.push(print.P('➢ play 345 * 选取id为345播放', Color.normal));
-        item.push(print.P('➢ stop * 暂停', Color.normal));
-        item.push(print.P('➢ start * 播放', Color.normal));
-        item.push(print.P('➢ search 关键字 * 搜索音乐/音乐人/专辑', Color.normal));
+        item.push(print.P(print.SPAN('-- search (Keyword：string)，', Color.warn) + 'Search keywords （搜索关键字）', Color.normal));
+        item.push(print.P(print.SPAN('-- play (Number：number)，', Color.warn) + 'Select the song to play through ID（选取id播放）', Color.normal));
+        item.push(print.P(print.SPAN('-- volume (Number：number)，', Color.warn) + 'Volume control（音量控制）', Color.normal));
+        item.push(print.P(print.SPAN('-- download (Number：number)，', Color.warn) + 'Download the ID number for music（下载音乐）', Color.normal));
+        item.push(print.P(print.SPAN('-- state，', Color.warn) + 'Display the current state（显示当前状态）', Color.normal));
+        item.push(print.P(print.SPAN('-- clear，', Color.warn) + 'Emptying console log（清空控制台）', Color.normal));
+        item.push(print.P(print.SPAN('-- exit，', Color.warn) + 'Back level directory（回退上一级目录）', Color.normal));
+        item.push(print.P(print.SPAN('-- stop/start，', Color.warn) + 'Pause / play（暂停/播放）', Color.normal));
         return item.join('');
     }
 
@@ -58,15 +64,15 @@ export class FormatFactory {
         ];
         res.result.songs.forEach((v, i) => {
             const item = [];
-            item.push(print.SPAN(i + 1, Color.warn));
-            item.push(print.SPAN(`: ${v.name} ，`, Color.success));
-            item.push(print.SPAN(` [id] : ${v.id} ，`, Color.success));
-            item.push(print.SPAN(` [演唱] : ${v.artists[0].name} ，`, Color.normal));
-            item.push(print.SPAN(` [电台] : 《${v.album.name}》 ，`, Color.normal));
-            item.push(print.SPAN(` (alias) : ${v.alias} ，`, Color.error));
-            item.push(print.SPAN(` [时长] : ${(v.duration / (1000 * 60)).toFixed(2)} ，`, Color.purple));
-            item.push(print.SPAN(` [status] : ${v.status} ，`, Color.normal));
-            item.push(print.SPAN(` fee : ${v.fee} ，`, Color.normal));
+            item.push(print.SPAN(i + 1, Color.warn) + ': ');
+            item.push(print.SPAN(`${v.name}`, Color.success) + ' ，');
+            item.push(print.SPAN(` [id] : ${v.id}`, Color.success) + ' ，');
+            item.push(print.SPAN(` {演唱} : ${v.artists[0].name} `, Color.normal) + ' ，');
+            item.push(print.SPAN(` [电台] : 《${v.album.name}》`, Color.normal) + ' ，');
+            item.push(print.SPAN(` (alias) : ${v.alias}`, Color.error) + ' ，');
+            item.push(print.SPAN(` [时长] : ${(v.duration / (1000 * 60)).toFixed(2)}`, Color.purple) + ' ，');
+            item.push(print.SPAN(` [status] : ${v.status} `, Color.normal) + ' ，');
+            item.push(print.SPAN(` fee : ${v.fee} `, Color.normal) + ' 。');
             item.push(print.BR());
             message.push(item.join(''));
         });
