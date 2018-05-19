@@ -38,7 +38,7 @@ export class FormatFactory {
         if (success) {
             return doc;
         } else {
-            console.error(text);
+            return '';
         }
     }
 
@@ -48,6 +48,7 @@ export class FormatFactory {
         item.push(print.P(print.SPAN('-- play (Number：number)，', Color.warn) + 'Select the song to play through ID（选取id播放）', Color.normal));
         item.push(print.P(print.SPAN('-- volume (Number：number)，', Color.warn) + 'Volume control（音量控制）', Color.normal));
         item.push(print.P(print.SPAN('-- download (Number：number)，', Color.warn) + 'Download the ID number for music（下载音乐）', Color.normal));
+        item.push(print.P(print.SPAN('-- lyrics，', Color.warn) + 'Show the lyrics of the playback（显示播放的歌词）', Color.normal));
         item.push(print.P(print.SPAN('-- state，', Color.warn) + 'Display the current state（显示当前状态）', Color.normal));
         item.push(print.P(print.SPAN('-- clear，', Color.warn) + 'Emptying console log（清空控制台）', Color.normal));
         item.push(print.P(print.SPAN('-- exit，', Color.warn) + 'Back level directory（回退上一级目录）', Color.normal));
@@ -62,6 +63,16 @@ export class FormatFactory {
         const attr = [
             'name', 'id', 'artists', 'alias', 'duration', 'status', 'fee', 'album'
         ];
+
+
+
+        if (!res.result || !res.result.songs || !res.result.songs.length) {
+            return {
+                text: false,
+                array: []
+            };
+        }
+
         res.result.songs.forEach((v, i) => {
             const item = [];
             item.push(print.SPAN(i + 1, Color.warn) + ': ');
@@ -77,7 +88,10 @@ export class FormatFactory {
             message.push(item.join(''));
         });
 
-        return message.join('');
+        return {
+            text: message.join(''),
+            array: res.result.songs
+        };
 
     }
 
