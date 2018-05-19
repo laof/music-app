@@ -5,6 +5,7 @@ import '../assets/js/jquery.terminal.min';
 import { Print, print, Color } from '../serve/print';
 import { getCurrentDate, Defer } from '../serve/defer';
 import { format, LRC } from '../serve/format-factory';
+import { CATCH_ERROR_VAR } from '@angular/compiler/src/output/abstract_emitter';
 
 declare let document: any;
 interface SongSheet {
@@ -28,7 +29,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private searchList = [];
   private playList: SongSheet[] = [];
 
-  private loop: string;
+  private loop: String = 'no';
 
   private resize = '';
   private version = '10.0.16299.231';
@@ -103,7 +104,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.playList = this.service.getPlayList() as any || [];
-    this.loop = this.service.loop();
+    this.loop = this.service.loop() || this.loop;
     this.playInfo = this.service.playInfo() as any;
     this.$terminal = $(this.terminalEle.nativeElement);
     this.initCmd();
@@ -124,9 +125,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
   next(next = true) {
+
+    if (!this.playList || !this.playList.length) {
+      return;
+    }
     const id = this.playInfo ? this.playInfo.id : '';
 
-    if (this.playList && id) {
+    if (id) {
       for (let i = 0; i < this.playList.length; i++) {
         const v = this.playList[i];
         if (id === v.id) {
@@ -142,6 +147,9 @@ export class AppComponent implements OnInit, OnDestroy {
           }
         }
       }
+    } else {
+      this.playInfo = this.playList[0];
+      this.play(this.playInfo.id);
     }
 
   }
@@ -162,6 +170,8 @@ export class AppComponent implements OnInit, OnDestroy {
     if (id === 'all') {
       this.playList = [];
       this.service.savePlayList([]);
+      this.playInfo = null;
+      this.$audio[0].src = '';
       return;
     }
 
@@ -298,7 +308,7 @@ export class AppComponent implements OnInit, OnDestroy {
       if (url) {
         print.stopLoading();
         this.$audio.attr('src', url);
-        this.musicPlay(false);
+        this.musicPlay();
         print.success('资源加载正常，播放中。。。');
         setTimeout(() => {
           this.addList(id).then(res => {
@@ -358,18 +368,26 @@ export class AppComponent implements OnInit, OnDestroy {
     this.$audio[0].pause();
     print.success('暂停');
   }
-  musicPlay(log = true) {
+  musicPlay(log = false) {
 
+    const src = this.$audio[0].src;
 
-    if (!this.$audio[0].src && this.playInfo && this.playInfo.id) {
+    if (src && src.indexOf(location.href) === -1) {
+      try {
+        this.$audio[0].play();
+        if (log) {
+          print.success('播放');
+        }
+      } catch (e) {
+        print.error('资源解析错误，播放失败');
+      }
+
+    } else if (this.playInfo && this.playInfo.id) {
       this.play(this.playInfo.id);
-      return;
+    } else {
+      print.warn('没有资源，请查看播放列表');
     }
 
-    this.$audio[0].play();
-    if (log) {
-      print.success('播放');
-    }
   }
   initCmd() {
     const terminal = this.terminal = this.$terminal.terminal({
@@ -460,13 +478,33 @@ export class AppComponent implements OnInit, OnDestroy {
         print.normal(text);
       },
       play: id => {
-        this.play(id);
+        if (id === 'all') {
+          if (this.searchList.length) {
+            const list = [];
+            this.searchList.forEach(v => {
+              list.push({
+                name: v.name,
+                id: v.id
+              });
+            });
+            this.playList = list;
+            this.service.savePlayList(list);
+            this.playInfo = null;
+            this.showList();
+            this.next();
+          } else {
+            print.warn('没有相关列表,请先执行search 命令');
+
+          }
+        } else {
+          this.play(id);
+        }
       },
       stop: () => {
         this.musicStop();
       },
       start: () => {
-        this.musicPlay();
+        this.musicPlay(true);
       },
       bar: {
         sub: (a, b) => {
