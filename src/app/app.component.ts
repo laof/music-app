@@ -314,7 +314,7 @@ export class AppComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.addList(id).then(res => {
             this.setCurrent(id);
-            print.success('当前播放：' + this.playInfo.name + '-ID：' + this.playInfo.id);
+            print.success('当前播放：' + this.playInfo.name);
           });
           this.updateLyrics();
           this.cliStart();
