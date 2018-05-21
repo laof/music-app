@@ -418,6 +418,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
   }
   updateMusic() {
+
+    if (this.$audio && this.$audio[0]) {
+      if (this.$audio[0].paused) {
+        return;
+      }
+    }
+
     this.cliStop();
     print.destroyScreen();
     print.createScreen(this.playInfo).then(() => {
