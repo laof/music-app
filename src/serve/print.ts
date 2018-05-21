@@ -154,8 +154,6 @@ export class Print {
 
     createScreen(info): Promise<any> {
 
-        console.log(info);
-
         if (this.screen) {
             return Promise.resolve();
         }
@@ -201,7 +199,6 @@ export class Print {
     }
     time(time) {
         this.oldTime = secondToDate(time);
-        console.log(this.oldTime);
         if (this.$time) {
             this.$time.html(this.oldTime);
         }

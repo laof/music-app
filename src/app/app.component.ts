@@ -249,8 +249,6 @@ export class AppComponent implements OnInit, OnDestroy {
       let name = '';
       let singer = '';
       let time = '';
-      console.log(res);
-
       try {
         name = res.songs[0].name;
         time = secondToDate(res.songs[0].publishTime / 1000);
@@ -561,7 +559,6 @@ export class AppComponent implements OnInit, OnDestroy {
         prompt: 'music>',
         softPause: true,
         keydown: (e) => {
-          // console.log(terminal);
           // const keyboard = e.originalEvent;
           // if (keyboard.ctrlKey && keyboard.keyCode === 67) {
           //   this.cliStart();
