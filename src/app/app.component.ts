@@ -35,6 +35,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private version = '10.0.16299.231';
 
   @ViewChild('terminal') terminalEle: ElementRef;
+  @ViewChild('audio') audio: ElementRef;
   private $terminal: any;
   private terminal: any;
   private $audio: any;
@@ -109,7 +110,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.$terminal = $(this.terminalEle.nativeElement);
     this.initCmd();
     this.onResize();
-    this.$audio = $('#app-audio');
+    this.$audio = $(this.audio.nativeElement);
     this.$audio.on('timeupdate', () => {
       this.playLyrics();
     });
