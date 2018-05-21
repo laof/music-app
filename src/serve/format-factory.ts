@@ -51,6 +51,7 @@ export class FormatFactory {
         item.push(print.P(print.SPAN('-- loop (yes | no | show)', Color.warn) + 'Set the single cycle to play, the default list is true. （设置单曲循环播放，默认列表循环为true）', Color.normal));
         item.push(print.P(print.SPAN('-- delete (Number：number | all :string)，', Color.warn) + 'Delete one or all of the deletes from the list （从列表中删除某一条或全部删除）', Color.normal));
         item.push(print.P(print.SPAN('-- add (Number：number)，', Color.warn) + 'Add to the playlist （新增到播放列表）', Color.normal));
+        item.push(print.P(print.SPAN('-- music，', Color.warn) + 'If there is a playback task, the player puts it in the bottom（如果存在播放任务，播放器放入底部）', Color.normal));
         item.push(print.P(print.SPAN('-- lyrics，', Color.warn) + 'Show the lyrics of the playback（显示播放的歌词）', Color.normal));
         item.push(print.P(print.SPAN('-- state，', Color.warn) + 'Display the current state（显示当前状态）', Color.normal));
         item.push(print.P(print.SPAN('-- list，', Color.warn) + 'View the playlist（查看播放列表）', Color.normal));
