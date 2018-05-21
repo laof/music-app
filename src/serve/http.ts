@@ -46,7 +46,7 @@ export class AppService {
 
     start(url) {
         const all = this.host + url;
-        print.normal(print.SPAN('Loading  LHttpRequest ：', Color.purple) + encodeURI(all));
+        // print.normal(print.SPAN('Loading  LHttpRequest ：', Color.purple) + encodeURI(all));
         return all;
     }
 

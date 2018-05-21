@@ -1,40 +1,54 @@
-import { Defer, guid } from './defer';
-
+import { Defer, guid, secondToDate } from './tool';
+import { SongSheet } from '../app/app.component';
+import * as $ from 'jquery';
 
 export let Color = {
     success: '#23d18b',
     error: '#ff0000',
     normal: '#aaa',
     purple: '#ac3fea', // 紫色
+    mud: '#ce9178', // 泥巴色
     warn: '#f5f543',
 };
 
-export let loadingText = [
 
-    ''
+interface CssName {
+    name: string;
+    singer: string;
+    time: string;
+    lyrics: string;
+}
 
-];
 
 
 export class Print {
 
-    private loading = false;
+    private screen: Boolean = false;
+
     private id = 'a' + new Date().getTime();
-    private lyricsDom;
-    private lyr: Boolean = false;
 
     private L: string;
     private R: string;
 
+    private $name = null;
+    private $singer = null;
+    private $time = null;
+    private $lyrics = null;
+    private $duration = null;
+
     private terminal: any;
     private LRegExp: RegExp;
     private RRegExp: RegExp;
+    private css: CssName;
+    private oldLyric: String = '...';
+    private oldTime: String = '00:00:00';
 
     constructor() {
         this.L = guid();
         this.R = guid();
         this.LRegExp = new RegExp(this.L, 'g');
         this.RRegExp = new RegExp(this.R, 'g');
+
     }
 
     private target(tag, content, color = Color.normal) {
@@ -106,13 +120,22 @@ export class Print {
     BR() {
         return `${this.L}br/${this.R}`;
     }
+    html(content) {
+        const str = content.replace(this.LRegExp, '<');
+        const text = str.replace(this.RRegExp, '>');
+        return text;
+    }
+    unhtml(html) {
+        const str = html.replace(/</g, this.L);
+        const text = str.replace(/>/g, this.R);
+        return text;
+    }
     log(text): Promise<any> {
         const defer = new Defer();
         this.terminal.echo(text, {
             raw: true,
             finalize: (dom) => {
-                const str1 = text.replace(this.LRegExp, '<');
-                const str = str1.replace(this.RRegExp, '>');
+                const str = this.html(dom.html());
                 dom.html(str);
                 defer.resolve(dom);
             }
@@ -120,37 +143,78 @@ export class Print {
         return defer.promise;
     }
 
-    removeLyrics() {
-        this.lyr = false;
-        if (this.lyricsDom) {
-            this.lyricsDom.html('....').removeClass('lyrics' + this.id);
-        }
-        this.lyricsDom = null;
+
+    destroyScreen() {
+        this.$name = null;
+        this.$singer = null;
+        this.$time = null;
+        this.$lyrics = null;
+        this.screen = false;
     }
 
-    displayLyrics() {
-        this.lyr = true;
-    }
+    createScreen(info): Promise<any> {
 
-    setLyrics(str) {
+        console.log(info);
 
-        if (!this.lyr) {
-            return;
+        if (this.screen) {
+            return Promise.resolve();
         }
 
-        str = '♬' + (str || '.....');
+        const defer = new Defer();
+        const css = {
+            name: 'name' + this.id,
+            singer: 'singer' + this.id,
+            time: 'time' + this.id,
+            lyrics: 'lyrics' + this.id,
+            duration: 'duration' + this.id
+        };
 
-        if (this.lyricsDom) {
-            this.lyricsDom.html(str);
-        } else {
-            this.log(str).then(dom => {
-                if (this.lyr) {
-                    this.lyricsDom = dom.addClass('lyrics' + this.id).html(str);
-                }
-            });
+        const html = `
+            <span class="${css.name}" style="color:${Color.success};">${info.name}</span>
+            <span class="${css.singer}" >${info.singer}</span>
+            <span style="color:${Color.mud};" >[</span>
+            <span class="${css.time}" style="color:${Color.mud};"  >${this.oldTime}</span>
+            <span>/</span>
+            <span class="${css.duration}" style="color:${Color.mud};" >${info.time}</span>
+            <span style="color:${Color.mud};" >]</span>
+            <span style="color:${Color.purple};"> ∲ </span>
+            <span class="${css.lyrics}" style="color:${Color.purple};" >${this.oldLyric}</span>
+        `;
+
+        this.log(this.unhtml(html)).then(dom => {
+            this.$name = dom.find('.' + css.name);
+            this.$singer = dom.find('.' + css.singer);
+            this.$time = dom.find('.' + css.time);
+            this.$duration = dom.find('.' + css.duration);
+            this.$lyrics = dom.find('.' + css.lyrics);
+            this.screen = true;
+            defer.resolve();
+        });
+        return defer.promise;
+    }
+
+    musicInfo(info) {
+        this.$name.html(info.name);
+        this.$singer.html(info.singer);
+        this.$duration.html(info.time);
+        this.$lyrics.html(info.lyrics);
+    }
+    time(time) {
+        this.oldTime = secondToDate(time);
+        console.log(this.oldTime);
+        if (this.$time) {
+            this.$time.html(this.oldTime);
         }
     }
 
+    lyrics(text) {
+        const str = text || '...';
+        this.oldLyric = str;
+        if (this.$lyrics) {
+            this.$lyrics.html(str);
+        }
+
+    }
 
     warn(text) {
         return this.log(this.SPAN(text, Color.warn));
@@ -165,6 +229,5 @@ export class Print {
         return this.log(this.SPAN(text, Color.error));
     }
 }
-
 
 export let print = new Print();

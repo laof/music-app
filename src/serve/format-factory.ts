@@ -1,5 +1,5 @@
-import { Print, print, Color } from './print';
-import { getCurrentDate } from './defer';
+import { getCurrentDate, secondToDate } from './tool';
+import { print, Color } from './print';
 
 export interface LRC {
     time: string;
@@ -65,7 +65,7 @@ export class FormatFactory {
     list(res) {
         const message = [];
 
-        print.normal('Date: ' + getCurrentDate());
+        // print.normal('Date: ' + getCurrentDate());
         const attr = [
             'name', 'id', 'artists', 'alias', 'duration', 'status', 'fee', 'album'
         ];
@@ -86,7 +86,7 @@ export class FormatFactory {
             item.push(print.SPAN(` [id] : ${v.id}`, Color.success) + ' ，');
             item.push(print.SPAN(` {演唱} : ${v.artists[0].name} `, Color.normal) + ' ，');
             item.push(print.SPAN(` [电台] : 《${v.album.name}》`, Color.normal) + ' ，');
-            item.push(print.SPAN(` [时长] : ${(v.duration / (1000 * 60)).toFixed(2)}`, Color.purple) + ' ，');
+            item.push(print.SPAN(` [时长] ${secondToDate(v.duration / 1000)}`, Color.purple) + ' ，');
             item.push(print.SPAN(` (alias) : ${v.alias}`, Color.error) + ' ，');
             item.push(print.SPAN(` [status] : ${v.status} `, Color.normal) + ' ，');
             item.push(print.SPAN(` fee : ${v.fee} `, Color.normal) + ' 。');

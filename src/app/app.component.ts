@@ -3,13 +3,15 @@ import { AppService } from '../serve/http';
 import * as $ from 'jquery';
 import '../assets/js/jquery.terminal.min';
 import { Print, print, Color } from '../serve/print';
-import { getCurrentDate, Defer } from '../serve/defer';
+import { getCurrentDate, Defer, secondToDate } from '../serve/tool';
 import { format, LRC } from '../serve/format-factory';
 import { CATCH_ERROR_VAR } from '@angular/compiler/src/output/abstract_emitter';
 
 declare let document: any;
-interface SongSheet {
+export interface SongSheet {
   name: string;
+  singer: string;
+  time: string;
   id: string | number;
 }
 
@@ -59,8 +61,9 @@ export class AppComponent implements OnInit, OnDestroy {
       });
       this.lrc = data;
     } catch (e) {
-      print.error('解析歌词失败');
+      print.lyrics('解析歌词失败');
       data = false;
+      this.lrc = [];
     }
     return data;
   }
@@ -94,8 +97,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
   test() {
-    const a = this.$audio.val();
-    console.log(a);
+    // const a = this.$audio.val();
+    // console.log(a);
   }
 
 
@@ -116,16 +119,16 @@ export class AppComponent implements OnInit, OnDestroy {
     });
     this.$audio.on('ended', () => {
       if (this.loop === 'yes') {
-        this.musicPlay();
+        this.musicPlay(false);
       } else {
-        this.next();
+        this.next(true, false);
       }
     });
 
   }
 
 
-  next(next = true) {
+  next(next = true, updateScreen = true) {
 
     if (!this.playList || !this.playList.length) {
       return;
@@ -138,12 +141,12 @@ export class AppComponent implements OnInit, OnDestroy {
         if (id === v.id) {
           const nestObj = this.playList[(next ? (i + 1) : (i - 1))];
           if (nestObj) {
-            this.play(nestObj.id);
+            this.play(nestObj.id, updateScreen);
           } else {
             if (next) {
-              this.play(this.playList[0].id);
+              this.play(this.playList[0].id, updateScreen);
             } else {
-              this.play(this.playList[this.playList.length - 1].id);
+              this.play(this.playList[this.playList.length - 1].id, updateScreen);
             }
           }
         }
@@ -195,6 +198,8 @@ export class AppComponent implements OnInit, OnDestroy {
       if (v.id === id) {
         this.playInfo = {
           name: v.name,
+          time: v.time,
+          singer: v.singer,
           id: v.id
         };
         this.service.playInfo(this.playInfo);
@@ -226,9 +231,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
       const v = this.searchList[i];
       if (v.id === id) {
-        const name = v.name + '-' + v.artists[0].name;
+        const name = v.name;
         const info = {
-          name: name,
+          name: v.name,
+          singer: v.artists[0].name,
+          time: secondToDate(v.duration / 1000),
           id: v.id
         };
         this.pushPlsyList(info);
@@ -240,14 +247,22 @@ export class AppComponent implements OnInit, OnDestroy {
     // 在线获取
     this.service.detail(id).subscribe((res: any) => {
       let name = '';
+      let singer = '';
+      let time = '';
+      console.log(res);
+
       try {
-        name = res.songs[0].name + '-' + res.songs[0].ar[0].name;
+        name = res.songs[0].name;
+        time = secondToDate(res.songs[0].publishTime / 1000);
+        singer = res.songs[0].ar[0].name;
       } catch (e) {
         name = '未知歌名';
       }
 
       const info = {
+        singer,
         name,
+        time,
         id
       };
 
@@ -262,13 +277,16 @@ export class AppComponent implements OnInit, OnDestroy {
 
   }
 
+
+
   playLyrics() {
 
-    const currentTime = this.$audio[0].currentTime;
-
+    const audio = this.$audio[0];
+    const currentTime = audio.currentTime;
+    print.time(currentTime);
     if (this.lrc.length && this.lrc[1] && currentTime > this.miao(this.lrc[1].time)) {
       const text = this.lrc[1].text;
-      print.setLyrics(text);
+      print.lyrics(text);
       this.lrc.shift();
     }
   }
@@ -288,13 +306,8 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateLyrics() {
-    print.removeLyrics();
-    print.displayLyrics();
-    print.setLyrics('');
-  }
 
-  play(id) {
+  play(id, updateScreen = true) {
     this.cliStop();
     const promise = [
       this.service.play(id).toPromise(),
@@ -302,23 +315,36 @@ export class AppComponent implements OnInit, OnDestroy {
     ];
 
     Promise.all(promise).then((arr: any[]) => {
-      this.lyric(arr[1]);
-      const num = new Date().getTime() + '';
-
       const url = this.url(arr[0]);
+      const lryic = this.lyric(arr[1]);
       if (url) {
-        print.stopLoading();
         this.$audio.attr('src', url);
-        this.musicPlay();
-        print.success('资源加载正常，播放中。。。');
-        setTimeout(() => {
-          this.addList(id).then(res => {
+        // print.success('资源加载正常，播放中。。。');
+        this.addList(id).then(res => {
+          if (!res) {
             this.setCurrent(id);
-            print.success('当前播放：' + this.playInfo.name);
-          });
-          this.updateLyrics();
+          }
+          return true;
+        }).then(res => {
+          if (updateScreen) {
+            print.destroyScreen();
+          }
+          print.createScreen(this.playInfo);
+          return true;
+        }).then(() => {
+          let lrc = '';
+
+          if (lryic && lryic.length && this.lrc[0]) {
+            lrc = this.lrc[0].text || '';
+          }
+
+          print.lyrics(lrc);
+          print.musicInfo(this.playInfo);
+          try {
+            this.$audio[0].play();
+          } catch (e) { }
           this.cliStart();
-        }, 1000);
+        });
       } else {
         print.error('歌曲暂无版权，不能正常播放');
         this.cliStart();
@@ -349,12 +375,11 @@ export class AppComponent implements OnInit, OnDestroy {
       } else {
         print.error('找不到资源');
       }
-      print.normal('Time：' + (new Date().getTime() - start) + 'ms');
+      // print.normal('Time：' + (new Date().getTime() - start) + 'ms');
       this.cliStart();
 
     });
   }
-
 
 
   showList() {
@@ -369,26 +394,35 @@ export class AppComponent implements OnInit, OnDestroy {
     this.$audio[0].pause();
     print.success('暂停');
   }
-  musicPlay(log = false) {
+  musicPlay(updateScreen = true) {
 
     const src = this.$audio[0].src;
 
     if (src && src.indexOf(location.href) === -1) {
       try {
         this.$audio[0].play();
-        if (log) {
-          print.success('播放');
+        if (updateScreen) {
+          this.updateMusic();
         }
       } catch (e) {
         print.error('资源解析错误，播放失败');
       }
 
     } else if (this.playInfo && this.playInfo.id) {
-      this.play(this.playInfo.id);
+      this.play(this.playInfo.id, updateScreen);
+    } else if (this.playList && this.playList.length) {
+      this.play(this.playList[0].id, updateScreen);
     } else {
       print.warn('没有资源，请查看播放列表');
     }
 
+  }
+  updateMusic() {
+    this.cliStop();
+    print.destroyScreen();
+    print.createScreen(this.playInfo).then(() => {
+      this.cliStart();
+    });
   }
   initCmd() {
     const terminal = this.terminal = this.$terminal.terminal({
@@ -424,7 +458,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.cliStop();
         this.addList(id).then(res => {
           if (res) {
-            print.success('添加成功');
+            // print.success('添加成功');
             this.showList();
           } else {
             print.error('添加失败，列表已存在');
@@ -461,14 +495,14 @@ export class AppComponent implements OnInit, OnDestroy {
       search: name => {
         this.search(name);
       },
-      lyrics: () => {
-        this.updateLyrics();
+      music: () => {
+        this.updateMusic();
       },
       next: () => {
-        this.next();
+        this.next(true, true);
       },
       prev: () => {
-        this.next(false);
+        this.next(false, true);
       },
       download: id => {
         // print.warn('浏览器不支持');
@@ -481,10 +515,12 @@ export class AppComponent implements OnInit, OnDestroy {
       play: id => {
         if (id === 'all') {
           if (this.searchList.length) {
-            const list = [];
+            const list: SongSheet[] = [];
             this.searchList.forEach(v => {
               list.push({
                 name: v.name,
+                singer: v.artists[0].name,
+                time: secondToDate(v.duration / 1000),
                 id: v.id
               });
             });
@@ -492,10 +528,9 @@ export class AppComponent implements OnInit, OnDestroy {
             this.service.savePlayList(list);
             this.playInfo = null;
             this.showList();
-            this.next();
+            this.next(true, true);
           } else {
             print.warn('没有相关列表,请先执行search 命令');
-
           }
         } else {
           this.play(id);
@@ -526,9 +561,8 @@ export class AppComponent implements OnInit, OnDestroy {
           // }
         },
         onClear: () => {
-          print.removeLyrics();
+          this.updateMusic();
           this.onResize();
-          terminal.resize();
         }
       });
 
