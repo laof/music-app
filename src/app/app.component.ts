@@ -139,11 +139,11 @@ export class AppComponent implements OnInit, OnDestroy {
       for (let i = 0; i < this.playList.length; i++) {
         const v = this.playList[i];
         if (id === v.id) {
-          const nestObj = this.playList[(next ? (i + 1) : (i - 1))];
-          if (nestObj) {
-            this.play(nestObj.id, updateScreen);
+          const nextObj = this.playList[(next ? (i + 1) : (i - 1))]; // 上一个or下一个
+          if (nextObj) {
+            this.play(nextObj.id, updateScreen);
           } else {
-            if (next) {
+            if (/* 当前最后一位 */next) {
               this.play(this.playList[0].id, updateScreen);
             } else {
               this.play(this.playList[this.playList.length - 1].id, updateScreen);
@@ -152,8 +152,7 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       }
     } else {
-      this.playInfo = this.playList[0];
-      this.play(this.playInfo.id);
+      this.play(this.playList[0].id, updateScreen);
     }
 
   }
@@ -249,6 +248,8 @@ export class AppComponent implements OnInit, OnDestroy {
       let name = '';
       let singer = '';
       let time = '';
+      console.log(res);
+
       try {
         name = res.songs[0].name;
         time = secondToDate(res.songs[0].publishTime / 1000);
@@ -280,6 +281,9 @@ export class AppComponent implements OnInit, OnDestroy {
   playLyrics() {
 
     const audio = this.$audio[0];
+
+    print.drawProgress(audio.buffered, audio.duration);
+
     const currentTime = audio.currentTime;
     print.time(currentTime);
     if (this.lrc.length && this.lrc[1] && currentTime > this.miao(this.lrc[1].time)) {
@@ -319,16 +323,13 @@ export class AppComponent implements OnInit, OnDestroy {
         this.$audio.attr('src', url);
         // print.success('资源加载正常，播放中。。。');
         this.addList(id).then(res => {
-          if (!res) {
-            this.setCurrent(id);
-          }
+          this.setCurrent(id);
           return true;
         }).then(res => {
           if (updateScreen) {
             print.destroyScreen();
           }
-          print.createScreen(this.playInfo);
-          return true;
+          return print.createScreen(this.playInfo);
         }).then(() => {
           let lrc = '';
 
@@ -336,8 +337,8 @@ export class AppComponent implements OnInit, OnDestroy {
             lrc = this.lrc[0].text || '';
           }
 
-          print.lyrics(lrc);
           print.musicInfo(this.playInfo);
+          print.lyrics(lrc);
           try {
             this.$audio[0].play();
           } catch (e) { }
@@ -559,6 +560,7 @@ export class AppComponent implements OnInit, OnDestroy {
         prompt: 'music>',
         softPause: true,
         keydown: (e) => {
+          // console.log(terminal);
           // const keyboard = e.originalEvent;
           // if (keyboard.ctrlKey && keyboard.keyCode === 67) {
           //   this.cliStart();

@@ -14,8 +14,11 @@ export let Color = {
 
 interface CssName {
     name: string;
+    loading: string;
+    duration: string;
     singer: string;
     time: string;
+    progress: string;
     lyrics: string;
 }
 
@@ -30,11 +33,15 @@ export class Print {
     private L: string;
     private R: string;
 
-    private $name = null;
-    private $singer = null;
-    private $time = null;
-    private $lyrics = null;
-    private $duration = null;
+    private loader = 0;
+
+    // private $load = null;
+    // private $loadi = null;
+    // private $name = null;
+    // private $singer = null;
+    // private $time = null;
+    // private $lyrics = null;
+    // private $duration = null;
 
     private terminal: any;
     private LRegExp: RegExp;
@@ -43,11 +50,23 @@ export class Print {
     private oldLyric: String = '...';
     private oldTime: String = '00:00:00';
 
+
+
     constructor() {
         this.L = guid();
         this.R = guid();
         this.LRegExp = new RegExp(this.L, 'g');
         this.RRegExp = new RegExp(this.R, 'g');
+
+        this.css = {
+            name: 'name' + this.id,
+            loading: 'loading' + this.id,
+            singer: 'singer' + this.id,
+            time: 'time' + this.id,
+            lyrics: 'lyrics' + this.id,
+            progress: 'progress' + this.id,
+            duration: 'duration' + this.id
+        };
 
     }
 
@@ -100,14 +119,6 @@ export class Print {
 
     }
 
-    starLoading() {
-        this.log(this.SPAN(Color.warn, Color.normal)).then(dom => {
-
-        });
-    }
-    stopLoading() {
-
-    }
     init(terminal) {
         this.terminal = terminal;
     }
@@ -145,11 +156,54 @@ export class Print {
 
 
     destroyScreen() {
-        this.$name = null;
-        this.$singer = null;
-        this.$time = null;
-        this.$lyrics = null;
+        // this.$name = null;
+        // this.$singer = null;
+        // this.$time = null;
+        // this.$lyrics = null;
+        this.updateCss();
         this.screen = false;
+    }
+
+    drawProgress(buffered, duration) {
+
+        const dom = $('#' + this.css.loading);
+        const load = ['\\', '|', '-', '/'];
+        let str = '...';
+        let pr = '';
+        const finish = false;
+        if (!dom.length) {
+            return;
+        }
+
+        this.loader++;
+        if (this.loader >= load.length) {
+            this.loader = 0;
+        }
+
+        const width = dom.width();
+        const height = dom.height();
+
+        for (let i = 0; i < buffered.length; i++) {
+            const leadingEdge = buffered.start(i) / duration * width;
+            const trailingEdge = buffered.end(i) / duration * width;
+            const n = (trailingEdge - leadingEdge) / width;
+            if (n) {
+                if (n < 1) {
+                    pr = load[this.loader];
+                } else {
+                    pr = 'ok';
+                }
+                const temp = (trailingEdge - leadingEdge) / width * 100;
+                str = temp.toFixed(2) + '%';
+            }
+            dom.html('[' + pr + ']' + str);
+        }
+    }
+
+    updateCss() {
+        Object.keys(this.css).forEach(key => {
+            $('#' + this.css[key]).removeAttr('id');
+        });
     }
 
     createScreen(info): Promise<any> {
@@ -159,58 +213,55 @@ export class Print {
         }
 
         const defer = new Defer();
-        const css = {
-            name: 'name' + this.id,
-            singer: 'singer' + this.id,
-            time: 'time' + this.id,
-            lyrics: 'lyrics' + this.id,
-            duration: 'duration' + this.id
-        };
+
+        const css = this.css;
 
         const html = `
-            <span class="${css.name}" style="color:${Color.success};">${info.name}</span>
-            <span class="${css.singer}" >${info.singer}</span>
+            <span id="${css.loading}" style="color:#5a5a59;">load...</span>
+            <span id="${css.name}" style="color:${Color.success};">${info.name}</span>
+            <span id="${css.singer}" >${info.singer}</span>
             <span style="color:${Color.mud};" >[</span>
-            <span class="${css.time}" style="color:${Color.mud};"  >${this.oldTime}</span>
+            <span id="${css.time}" style="color:${Color.mud};"  >${this.oldTime}</span>
             <span>/</span>
-            <span class="${css.duration}" style="color:${Color.mud};" >${info.time}</span>
+            <span id="${css.duration}" style="color:${Color.mud};" >${info.time}</span>
             <span style="color:${Color.mud};" >]</span>
             <span style="color:${Color.purple};"> ∲ </span>
-            <span class="${css.lyrics}" style="color:${Color.purple};" >${this.oldLyric}</span>
+            <span id="${css.lyrics}" style="color:${Color.purple};" >${this.oldLyric}</span>
         `;
 
+
         this.log(this.unhtml(html)).then(dom => {
-            this.$name = dom.find('.' + css.name);
-            this.$singer = dom.find('.' + css.singer);
-            this.$time = dom.find('.' + css.time);
-            this.$duration = dom.find('.' + css.duration);
-            this.$lyrics = dom.find('.' + css.lyrics);
             this.screen = true;
             defer.resolve();
         });
         return defer.promise;
     }
 
-    musicInfo(info) {
-        this.$name.html(info.name);
-        this.$singer.html(info.singer);
-        this.$duration.html(info.time);
-        this.$lyrics.html(info.lyrics);
-    }
-    time(time) {
-        this.oldTime = secondToDate(time);
-        if (this.$time) {
-            this.$time.html(this.oldTime);
+    private value(id, value) {
+
+        const target = document.getElementById(id);
+        if (target) {
+            target.innerHTML = value;
         }
+
+    }
+
+    musicInfo(info) {
+        this.value(this.css.name, info.name);
+        this.value(this.css.singer, info.singer);
+        this.value(this.css.duration, info.time);
+        this.value(this.css.lyrics, info.lyrics);
+    }
+    time(timer) {
+        const time = secondToDate(timer);
+        this.oldTime = time;
+        this.value(this.css.time, time);
     }
 
     lyrics(text) {
         const str = text || '...';
         this.oldLyric = str;
-        if (this.$lyrics) {
-            this.$lyrics.html(str);
-        }
-
+        this.value(this.css.lyrics, str);
     }
 
     warn(text) {

@@ -1,4 +1,4 @@
 export default {
-    server:  'http://39.106.109.167:18080'
+    server: '' // 'http://39.106.109.167:18080'
 };
 
