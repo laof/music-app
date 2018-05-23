@@ -60,6 +60,7 @@ export class FormatFactory {
         item.push(print.P(print.SPAN('-- clear，', Color.warn) + 'Emptying console log（清空控制台）', Color.normal));
         item.push(print.P(print.SPAN('-- exit，', Color.warn) + 'Back level directory（回退上一级目录）', Color.normal));
         item.push(print.P(print.SPAN('-- stop/start，', Color.warn) + 'Pause / play（暂停/播放）', Color.normal));
+        item.push(print.P(print.SPAN('-- Ctrl + D，', Color.warn) + 'When the terminal is not able to input for a long time, the input line is called（终端长时间无相应不能输入时，唤出输入行）', Color.normal));
         return item.join('');
     }
 

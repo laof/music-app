@@ -99,6 +99,7 @@ export class AppComponent implements OnInit, OnDestroy {
   test() {
     // const a = this.$audio.val();
     // console.log(a);
+    this.cliStop();
   }
 
 

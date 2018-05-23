@@ -166,7 +166,7 @@ export class Print {
 
     drawProgress(buffered, duration) {
 
-        const dom = $('#' + this.css.loading);
+        const dom = this.value(this.css.loading);
         const load = ['\\', '|', '-', '/'];
         let str = '...';
         let pr = '';
@@ -202,7 +202,7 @@ export class Print {
 
     updateCss() {
         Object.keys(this.css).forEach(key => {
-            $('#' + this.css[key]).removeAttr('id');
+            $('.' + this.css[key]).removeClass(this.css[key]);
         });
     }
 
@@ -217,16 +217,16 @@ export class Print {
         const css = this.css;
 
         const html = `
-            <span id="${css.loading}" style="color:#5a5a59;">load...</span>
-            <span id="${css.name}" style="color:${Color.success};">${info.name}</span>
-            <span id="${css.singer}" >${info.singer}</span>
+            <span class="${css.loading}" style="color:#5a5a59;">load...</span>
+            <span class="${css.name}" style="color:${Color.success};">${info.name}</span>
+            <span class="${css.singer}" >${info.singer}</span>
             <span style="color:${Color.mud};" >[</span>
-            <span id="${css.time}" style="color:${Color.mud};"  >${this.oldTime}</span>
+            <span class="${css.time}" style="color:${Color.mud};"  >${this.oldTime}</span>
             <span>/</span>
-            <span id="${css.duration}" style="color:${Color.mud};" >${info.time}</span>
+            <span class="${css.duration}" style="color:${Color.mud};" >${info.time}</span>
             <span style="color:${Color.mud};" >]</span>
             <span style="color:${Color.purple};"> ∲ </span>
-            <span id="${css.lyrics}" style="color:${Color.purple};" >${this.oldLyric}</span>
+            <span class="${css.lyrics}" style="color:${Color.purple};" >${this.oldLyric}</span>
         `;
 
 
@@ -237,13 +237,14 @@ export class Print {
         return defer.promise;
     }
 
-    private value(id, value) {
+    private value(className, value?) {
 
-        const target = document.getElementById(id);
-        if (target) {
-            target.innerHTML = value;
+        const target = $('.' + className + ':last');
+        if (target.length && value !== undefined) {
+            target.html(value);
         }
 
+        return target;
     }
 
     musicInfo(info) {
